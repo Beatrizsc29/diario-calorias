@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14342B">
+<title>Diário de Calorias</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --verde-escuro:#14342B;
+    --verde:#2E7D5B;
+    --verde-claro:#E4F0E8;
+    --creme:#F7F5EF;
+    --laranja:#E8622C;
+    --laranja-suave:#FCE9DF;
+    --texto:#21272A;
+    --texto-suave:#6B7570;
+    --branco:#FFFFFF;
+    --borda:#E2E0D8;
+    --vermelho:#C0392B;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--creme)}
+  body{
+    font-family:'Inter',system-ui,sans-serif;color:var(--texto);
+    -webkit-font-smoothing:antialiased;min-height:100vh;
+    padding-top:env(safe-area-inset-top);
+  }
+  .app{max-width:520px;margin:0 auto;padding:16px 16px 48px}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:8px 4px 18px}
+  .logo{font-family:'Sora',sans-serif;font-weight:800;font-size:20px;color:var(--verde-escuro);letter-spacing:-.3px}
+  .logo span{color:var(--laranja)}
+  .data-hoje{font-size:13px;color:var(--texto-suave);font-weight:500}
+  .botoes-topo{display:flex;gap:6px}
+  .btn-topo{
+    border:1px solid var(--borda);background:var(--branco);border-radius:999px;
+    padding:6px 12px;font-size:12px;font-weight:600;color:var(--verde-escuro);cursor:pointer;
+  }
+
+  .painel{
+    background:var(--verde-escuro);border-radius:24px;padding:22px 20px;color:#EAF3EE;
+    display:flex;gap:20px;align-items:center;box-shadow:0 8px 24px rgba(20,52,43,.18);
+  }
+  .anel-wrap{position:relative;width:132px;height:132px;flex-shrink:0}
+  .anel-wrap svg{transform:rotate(-90deg)}
+  .anel-fundo{stroke:rgba(255,255,255,.14)}
+  .anel-prog{stroke:var(--laranja);transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1)}
+  .anel-prog.estourou{stroke:#F4B740}
+  .anel-centro{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .anel-centro .num{font-family:'Sora',sans-serif;font-weight:800;font-size:26px;line-height:1}
+  .anel-centro .lbl{font-size:10px;letter-spacing:.8px;text-transform:uppercase;opacity:.75;margin-top:4px}
+  .painel-info{flex:1;display:flex;flex-direction:column;gap:10px}
+  .linha-info{display:flex;justify-content:space-between;font-size:13px}
+  .linha-info b{font-family:'Sora',sans-serif;font-weight:700}
+  .macros{display:flex;gap:8px;margin-top:2px}
+  .macro{flex:1;background:rgba(255,255,255,.09);border-radius:10px;padding:7px 6px;text-align:center}
+  .macro .v{font-family:'Sora',sans-serif;font-weight:700;font-size:14px}
+  .macro .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.6px;opacity:.7;margin-top:2px}
+
+  .entrada{margin-top:22px}
+  .abas{display:flex;gap:8px;margin-bottom:12px}
+  .aba{
+    flex:1;border:1px solid var(--borda);background:var(--branco);border-radius:12px;
+    padding:11px 0;font-size:14px;font-weight:600;color:var(--texto-suave);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:7px;
+    font-family:'Inter',sans-serif;transition:all .15s;
+  }
+  .aba.ativa{background:var(--verde-escuro);border-color:var(--verde-escuro);color:#fff}
+  .cartao{background:var(--branco);border:1px solid var(--borda);border-radius:16px;padding:16px}
+  .zona-foto{
+    border:2px dashed var(--borda);border-radius:12px;padding:26px 12px;text-align:center;cursor:pointer;
+    color:var(--texto-suave);font-size:14px;transition:border-color .15s;
+  }
+  .zona-foto:active{border-color:var(--verde)}
+  .zona-foto .icone{font-size:30px;display:block;margin-bottom:6px}
+  .preview{width:100%;border-radius:12px;display:block;max-height:280px;object-fit:cover}
+  textarea{
+    width:100%;border:1px solid var(--borda);border-radius:12px;padding:12px;font-family:'Inter',sans-serif;
+    font-size:16px;resize:vertical;min-height:84px;background:var(--creme);color:var(--texto);
+  }
+  textarea:focus,input:focus{outline:2px solid var(--verde);outline-offset:1px}
+  .nota{width:100%;border:1px solid var(--borda);border-radius:10px;padding:10px 12px;font-size:16px;margin-top:10px;font-family:'Inter',sans-serif;background:var(--creme)}
+  .btn{
+    width:100%;margin-top:12px;border:none;border-radius:12px;padding:14px;cursor:pointer;
+    font-family:'Sora',sans-serif;font-weight:700;font-size:15px;transition:opacity .15s;
+  }
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn-laranja{background:var(--laranja);color:#fff}
+  .btn-verde{background:var(--verde);color:#fff}
+  .btn-fantasma{background:none;border:1px solid var(--borda);color:var(--texto-suave);font-weight:600;font-family:'Inter',sans-serif}
+  .carregando{display:flex;align-items:center;justify-content:center;gap:10px;padding:18px 0;color:var(--texto-suave);font-size:14px;font-weight:500}
+  .spinner{width:18px;height:18px;border:2.5px solid var(--verde-claro);border-top-color:var(--verde);border-radius:50%;animation:gira .7s linear infinite}
+  @keyframes gira{to{transform:rotate(360deg)}}
+  .erro{background:#FBE9E7;color:var(--vermelho);border-radius:10px;padding:11px 13px;font-size:13.5px;margin-top:12px}
+
+  .resultado{margin-top:14px;border-top:1px dashed var(--borda);padding-top:14px}
+  .resultado h3{font-family:'Sora',sans-serif;font-size:14px;color:var(--verde-escuro);margin-bottom:10px}
+  .item-analise{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid #F0EEE6;font-size:14px}
+  .item-analise:last-of-type{border-bottom:none}
+  .item-analise .porcao{color:var(--texto-suave);font-size:12px;display:block}
+  .item-analise .kcal{font-family:'Sora',sans-serif;font-weight:700;color:var(--laranja);white-space:nowrap;margin-left:12px}
+  .obs-ia{font-size:12.5px;color:var(--texto-suave);margin-top:10px;font-style:italic}
+  .total-analise{display:flex;justify-content:space-between;margin-top:12px;padding:12px 14px;background:var(--laranja-suave);border-radius:12px;font-family:'Sora',sans-serif;font-weight:700;color:var(--verde-escuro)}
+
+  .secao-titulo{font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--verde-escuro);margin:26px 4px 10px;display:flex;justify-content:space-between;align-items:baseline}
+  .secao-titulo small{font-family:'Inter',sans-serif;font-weight:500;color:var(--texto-suave);font-size:12px}
+  .refeicao{
+    background:var(--branco);border:1px solid var(--borda);border-radius:14px;padding:13px 14px;margin-bottom:9px;
+    display:flex;gap:12px;align-items:center;
+  }
+  .refeicao .hora{background:var(--verde-claro);color:var(--verde-escuro);border-radius:9px;padding:6px 8px;font-family:'Sora',sans-serif;font-weight:700;font-size:12px;flex-shrink:0}
+  .refeicao .desc{flex:1;min-width:0}
+  .refeicao .desc .titulo{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .refeicao .desc .sub{font-size:12px;color:var(--texto-suave);margin-top:2px}
+  .refeicao .kcal{font-family:'Sora',sans-serif;font-weight:700;font-size:15px;color:var(--laranja);white-space:nowrap}
+  .refeicao .apagar{border:none;background:none;color:#C3BEB2;font-size:16px;cursor:pointer;padding:4px}
+  .vazio{text-align:center;color:var(--texto-suave);font-size:14px;padding:26px 10px;background:var(--branco);border:1px dashed var(--borda);border-radius:14px}
+
+  .historico{display:flex;gap:6px;align-items:flex-end;height:96px;background:var(--branco);border:1px solid var(--borda);border-radius:14px;padding:14px 14px 10px}
+  .dia-hist{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+  .barra{width:100%;max-width:26px;border-radius:6px 6px 3px 3px;background:var(--verde-claro);position:relative;min-height:4px;transition:height .5s}
+  .barra.cheia{background:var(--verde)}
+  .barra.hoje{background:var(--laranja)}
+  .dia-hist .rot{font-size:9.5px;color:var(--texto-suave);font-weight:600;text-transform:uppercase}
+
+  .modal-fundo{position:fixed;inset:0;background:rgba(20,52,43,.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal{background:var(--branco);border-radius:18px;padding:22px;width:100%;max-width:360px}
+  .modal h3{font-family:'Sora',sans-serif;color:var(--verde-escuro);font-size:16px;margin-bottom:6px}
+  .modal p{font-size:13px;color:var(--texto-suave);margin-bottom:14px;line-height:1.45}
+  .modal p a{color:var(--verde);font-weight:600}
+  .modal input{width:100%;border:1px solid var(--borda);border-radius:10px;padding:12px;font-size:16px;font-family:'Inter',sans-serif;background:var(--creme)}
+  .modal input.num{font-family:'Sora',sans-serif;font-weight:700;text-align:center}
+  .modal .acoes{display:flex;gap:8px;margin-top:14px}
+  .modal .acoes .btn{margin-top:0}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <div class="logo">Diário de <span>Calorias</span></div>
+      <div class="data-hoje" id="dataHoje"></div>
+    </div>
+    <div class="botoes-topo">
+      <button class="btn-topo" id="btnMeta">Meta</button>
+      <button class="btn-topo" id="btnChave" title="Configurar chave da IA">🔑</button>
+    </div>
+  </header>
+
+  <section class="painel">
+    <div class="anel-wrap">
+      <svg width="132" height="132" viewBox="0 0 132 132">
+        <circle class="anel-fundo" cx="66" cy="66" r="58" fill="none" stroke-width="11"/>
+        <circle class="anel-prog" id="anelProg" cx="66" cy="66" r="58" fill="none" stroke-width="11"
+                stroke-linecap="round" stroke-dasharray="364.4" stroke-dashoffset="364.4"/>
+      </svg>
+      <div class="anel-centro">
+        <div class="num" id="kcalHoje">0</div>
+        <div class="lbl">kcal hoje</div>
+      </div>
+    </div>
+    <div class="painel-info">
+      <div class="linha-info"><span>Meta diária</span><b id="metaTexto">2000 kcal</b></div>
+      <div class="linha-info"><span>Restante</span><b id="restanteTexto">2000 kcal</b></div>
+      <div class="macros">
+        <div class="macro"><div class="v" id="mProt">0g</div><div class="k">Proteína</div></div>
+        <div class="macro"><div class="v" id="mCarb">0g</div><div class="k">Carbo</div></div>
+        <div class="macro"><div class="v" id="mGord">0g</div><div class="k">Gordura</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="entrada">
+    <div class="abas">
+      <button class="aba ativa" id="abaFoto">📷 Foto</button>
+      <button class="aba" id="abaTexto">✏️ Escrever</button>
+    </div>
+
+    <div class="cartao">
+      <div id="modoFoto">
+        <div class="zona-foto" id="zonaFoto">
+          <span class="icone">🍽️</span>
+          Toque para tirar foto ou escolher da galeria
+        </div>
+        <input type="file" id="inputFoto" accept="image/*" style="display:none">
+        <img class="preview" id="previewFoto" style="display:none" alt="Foto da refeição">
+        <input class="nota" id="notaFoto" placeholder="Detalhe algo (opcional): ex. 'suco sem açúcar'">
+      </div>
+
+      <div id="modoTexto" style="display:none">
+        <textarea id="textoComida" placeholder="Descreva o que comeu…&#10;Ex.: 2 fatias de pão integral com requeijão e um copo de suco de laranja"></textarea>
+      </div>
+
+      <button class="btn btn-laranja" id="btnAnalisar">Calcular calorias</button>
+      <div class="carregando" id="carregando" style="display:none">
+        <div class="spinner"></div><span>Analisando sua refeição…</span>
+      </div>
+      <div class="erro" id="erro" style="display:none"></div>
+
+      <div class="resultado" id="resultado" style="display:none">
+        <h3>Estimativa da refeição</h3>
+        <div id="listaItens"></div>
+        <div class="obs-ia" id="obsIa"></div>
+        <div class="total-analise"><span>Total</span><span id="totalAnalise">0 kcal</span></div>
+        <button class="btn btn-verde" id="btnAdicionar">➕ Adicionar ao diário</button>
+        <button class="btn btn-fantasma" id="btnDescartar">Descartar</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="secao-titulo">Refeições de hoje <small id="contagemRef"></small></div>
+  <div id="listaRefeicoes"></div>
+
+  <div class="secao-titulo">Últimos 7 dias <small>vs. meta</small></div>
+  <div class="historico" id="historico"></div>
+</div>
+
+<!-- Modal meta -->
+<div class="modal-fundo" id="modalMeta" style="display:none">
+  <div class="modal">
+    <h3>Meta diária de calorias</h3>
+    <p>Defina quantas kcal você quer consumir por dia.</p>
+    <input class="num" type="number" id="inputMeta" min="800" max="6000" step="50">
+    <div class="acoes">
+      <button class="btn btn-fantasma" id="btnMetaCancelar">Cancelar</button>
+      <button class="btn btn-verde" id="btnMetaSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal chave API -->
+<div class="modal-fundo" id="modalChave" style="display:none">
+  <div class="modal">
+    <h3>Chave da IA (Groq)</h3>
+    <p>Para analisar as fotos, o app usa a IA gratuita da Groq. Crie sua chave grátis em
+       <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>
+       e cole aqui. A chave fica salva <b>somente neste celular</b>.</p>
+    <input type="password" id="inputChave" placeholder="gsk_...">
+    <div class="acoes">
+      <button class="btn btn-fantasma" id="btnChaveCancelar">Cancelar</button>
+      <button class="btn btn-verde" id="btnChaveSalvar">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var meta = 2000;
+  var diario = { entradas: [] };
+  var analiseAtual = null;
+  var fotoBase64 = null;
+  var modo = 'foto';
+  var hoje = new Date();
+  var CIRC = 2*Math.PI*58;
+
+  var MODELO = 'meta-llama/llama-4-scout-17b-16e-instruct';
+  var URL_GROQ = 'https://api.groq.com/openai/v1/chat/completions';
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function chaveDia(d){
+    var y=d.getFullYear(), m=('0'+(d.getMonth()+1)).slice(-2), dd=('0'+d.getDate()).slice(-2);
+    return 'kcal:dia:'+y+'-'+m+'-'+dd;
+  }
+  function ler(chave, padrao){
+    try{ var v=localStorage.getItem(chave); return v?JSON.parse(v):padrao; }catch(e){ return padrao; }
+  }
+  function gravar(chave, valor){
+    try{ localStorage.setItem(chave, JSON.stringify(valor)); }catch(e){ console.error(e); }
+  }
+
+  function iniciar(){
+    var dias=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+    var meses=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+    $('dataHoje').textContent = dias[hoje.getDay()]+', '+hoje.getDate()+' de '+meses[hoje.getMonth()];
+
+    var cfg = ler('kcal:config', {meta:2000});
+    meta = cfg.meta || 2000;
+    diario = ler(chaveDia(hoje), {entradas:[]});
+
+    renderTudo();
+    renderHistorico();
+
+    if(!ler('kcal:chave', null)){
+      $('modalChave').style.display='flex';
+    }
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.register('sw.js').catch(function(){});
+    }
+  }
+
+  function totaisDoDia(){
+    var t={kcal:0,prot:0,carb:0,gord:0};
+    diario.entradas.forEach(function(e){
+      t.kcal+=e.kcal||0; t.prot+=e.prot||0; t.carb+=e.carb||0; t.gord+=e.gord||0;
+    });
+    return t;
+  }
+
+  function renderTudo(){
+    var t = totaisDoDia();
+    $('kcalHoje').textContent = Math.round(t.kcal);
+    $('metaTexto').textContent = meta+' kcal';
+    var restante = meta - t.kcal;
+    $('restanteTexto').textContent = restante>=0 ? Math.round(restante)+' kcal' : Math.round(-restante)+' kcal acima';
+    $('mProt').textContent = Math.round(t.prot)+'g';
+    $('mCarb').textContent = Math.round(t.carb)+'g';
+    $('mGord').textContent = Math.round(t.gord)+'g';
+
+    var frac = Math.min(t.kcal/meta, 1);
+    var anel = $('anelProg');
+    anel.style.strokeDashoffset = CIRC*(1-frac);
+    anel.classList.toggle('estourou', t.kcal>meta);
+
+    var lista = $('listaRefeicoes');
+    lista.innerHTML='';
+    if(diario.entradas.length===0){
+      lista.innerHTML = '<div class="vazio">Nenhuma refeição registrada hoje.<br>Tire uma foto do seu prato para começar! 🍽️</div>';
+    } else {
+      diario.entradas.forEach(function(e){
+        var div=document.createElement('div');
+        div.className='refeicao';
+        div.innerHTML =
+          '<div class="hora">'+e.hora+'</div>'+
+          '<div class="desc"><div class="titulo"></div><div class="sub"></div></div>'+
+          '<div class="kcal">'+Math.round(e.kcal)+' kcal</div>'+
+          '<button class="apagar" title="Remover">✕</button>';
+        div.querySelector('.titulo').textContent = e.titulo;
+        div.querySelector('.sub').textContent = 'P '+Math.round(e.prot)+'g · C '+Math.round(e.carb)+'g · G '+Math.round(e.gord)+'g';
+        div.querySelector('.apagar').addEventListener('click', function(){ removerEntrada(e.id); });
+        lista.appendChild(div);
+      });
+    }
+    $('contagemRef').textContent = diario.entradas.length+' registro'+(diario.entradas.length===1?'':'s');
+  }
+
+  function renderHistorico(){
+    var wrap = $('historico');
+    wrap.innerHTML='';
+    var rotDias=['dom','seg','ter','qua','qui','sex','sáb'];
+    for(var i=6;i>=0;i--){
+      var d=new Date(hoje); d.setDate(hoje.getDate()-i);
+      var reg = (i===0) ? diario : ler(chaveDia(d), {entradas:[]});
+      var kcal=0; reg.entradas.forEach(function(e){kcal+=e.kcal||0;});
+      var frac=Math.min(kcal/meta,1);
+      var div=document.createElement('div');
+      div.className='dia-hist';
+      var alt=Math.max(4, Math.round(frac*62));
+      div.innerHTML='<div class="barra '+(i===0?'hoje':(kcal>0?'cheia':''))+'" style="height:'+alt+'px" title="'+Math.round(kcal)+' kcal"></div>'+
+                    '<div class="rot">'+(i===0?'hoje':rotDias[d.getDay()])+'</div>';
+      wrap.appendChild(div);
+    }
+  }
+
+  // abas
+  $('abaFoto').addEventListener('click', function(){ trocarModo('foto'); });
+  $('abaTexto').addEventListener('click', function(){ trocarModo('texto'); });
+  function trocarModo(m){
+    modo=m;
+    $('abaFoto').classList.toggle('ativa', m==='foto');
+    $('abaTexto').classList.toggle('ativa', m==='texto');
+    $('modoFoto').style.display = m==='foto'?'block':'none';
+    $('modoTexto').style.display = m==='texto'?'block':'none';
+    limparResultado();
+  }
+
+  // foto
+  $('zonaFoto').addEventListener('click', function(){ $('inputFoto').click(); });
+  $('previewFoto').addEventListener('click', function(){ $('inputFoto').click(); });
+  $('inputFoto').addEventListener('change', function(ev){
+    var arq = ev.target.files && ev.target.files[0];
+    if(!arq) return;
+    comprimirImagem(arq).then(function(b64){
+      fotoBase64=b64;
+      $('previewFoto').src='data:image/jpeg;base64,'+b64;
+      $('previewFoto').style.display='block';
+      $('zonaFoto').style.display='none';
+      limparResultado();
+    }).catch(function(){ mostrarErro('Não consegui ler a imagem. Tente outra foto.'); });
+  });
+
+  function comprimirImagem(arquivo){
+    return new Promise(function(resolve,reject){
+      var leitor=new FileReader();
+      leitor.onload=function(){
+        var img=new Image();
+        img.onload=function(){
+          var MAX=1024;
+          var w=img.width,h=img.height;
+          if(w>h && w>MAX){h=Math.round(h*MAX/w);w=MAX;}
+          else if(h>=w && h>MAX){w=Math.round(w*MAX/h);h=MAX;}
+          var cv=document.createElement('canvas');cv.width=w;cv.height=h;
+          cv.getContext('2d').drawImage(img,0,0,w,h);
+          var dataUrl=cv.toDataURL('image/jpeg',0.85);
+          resolve(dataUrl.split(',')[1]);
+        };
+        img.onerror=reject;
+        img.src=leitor.result;
+      };
+      leitor.onerror=reject;
+      leitor.readAsDataURL(arquivo);
+    });
+  }
+
+  // análise via Groq
+  $('btnAnalisar').addEventListener('click', analisar);
+
+  var INSTRUCAO = 'Você é um nutricionista especializado em comida brasileira. Analise a refeição e estime os valores nutricionais de cada item. Seja realista com as porções. Responda SOMENTE com JSON válido, sem markdown, sem crases, sem texto antes ou depois, neste formato exato: {"itens":[{"nome":"...","porcao":"ex: 1 concha (~140g)","calorias":0,"proteinas":0,"carboidratos":0,"gorduras":0}],"observacao":"uma frase curta e útil sobre a estimativa"}. Se não houver comida identificável, responda {"itens":[],"observacao":"explique o motivo"}.';
+
+  async function analisar(){
+    limparResultado();
+
+    var chaveApi = ler('kcal:chave', null);
+    if(!chaveApi){ $('modalChave').style.display='flex'; return; }
+
+    var conteudo=[];
+    if(modo==='foto'){
+      if(!fotoBase64){ mostrarErro('Escolha uma foto primeiro. 📷'); return; }
+      var nota=$('notaFoto').value.trim();
+      conteudo.push({type:'text',text:INSTRUCAO+(nota?('\n\nObservação de quem enviou: '+nota):'')});
+      conteudo.push({type:'image_url',image_url:{url:'data:image/jpeg;base64,'+fotoBase64}});
+    } else {
+      var desc=$('textoComida').value.trim();
+      if(!desc){ mostrarErro('Descreva o que você comeu. ✏️'); return; }
+      conteudo.push({type:'text',text:INSTRUCAO+'\n\nRefeição descrita: '+desc});
+    }
+
+    $('btnAnalisar').disabled=true;
+    $('carregando').style.display='flex';
+
+    try{
+      var resp = await fetch(URL_GROQ,{
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':'Bearer '+chaveApi
+        },
+        body:JSON.stringify({
+          model: MODELO,
+          max_tokens: 1000,
+          temperature: 0.2,
+          messages:[{role:'user',content:conteudo}]
+        })
+      });
+
+      if(resp.status===401){
+        mostrarErro('Chave inválida. Toque no 🔑 no topo e confira sua chave da Groq.');
+        return;
+      }
+      if(resp.status===429){
+        mostrarErro('Muitas análises seguidas. Espere um minuto e tente de novo (limite do plano gratuito).');
+        return;
+      }
+      var data = await resp.json();
+      if(data.error){
+        mostrarErro('Erro da IA: '+(data.error.message||'tente novamente.'));
+        return;
+      }
+      var texto = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+      texto = texto.replace(/```json|```/g,'').trim();
+      var ini=texto.indexOf('{'), fim=texto.lastIndexOf('}');
+      if(ini>=0 && fim>ini) texto=texto.slice(ini,fim+1);
+      var json = JSON.parse(texto);
+
+      if(!json.itens || json.itens.length===0){
+        mostrarErro(json.observacao || 'Não identifiquei comida. Tente outra foto ou descreva por texto.');
+        return;
+      }
+      analiseAtual = json;
+      mostrarResultado(json);
+    }catch(e){
+      console.error(e);
+      mostrarErro('Não consegui analisar agora. Verifique a internet e tente de novo.');
+    }finally{
+      $('btnAnalisar').disabled=false;
+      $('carregando').style.display='none';
+    }
+  }
+
+  function mostrarResultado(json){
+    var lista=$('listaItens'); lista.innerHTML='';
+    var total=0;
+    json.itens.forEach(function(it){
+      total += it.calorias||0;
+      var div=document.createElement('div');
+      div.className='item-analise';
+      var esq=document.createElement('div');
+      var nome=document.createElement('span'); nome.textContent=it.nome;
+      var porc=document.createElement('span'); porc.className='porcao'; porc.textContent=it.porcao||'';
+      esq.appendChild(nome); esq.appendChild(porc);
+      var kcal=document.createElement('span'); kcal.className='kcal'; kcal.textContent=Math.round(it.calorias||0)+' kcal';
+      div.appendChild(esq); div.appendChild(kcal);
+      lista.appendChild(div);
+    });
+    $('obsIa').textContent = json.observacao ? '💡 '+json.observacao : '';
+    $('totalAnalise').textContent = Math.round(total)+' kcal';
+    $('resultado').style.display='block';
+  }
+
+  // adicionar / descartar
+  $('btnAdicionar').addEventListener('click', function(){
+    if(!analiseAtual) return;
+    var t={kcal:0,prot:0,carb:0,gord:0};
+    analiseAtual.itens.forEach(function(it){
+      t.kcal+=it.calorias||0; t.prot+=it.proteinas||0; t.carb+=it.carboidratos||0; t.gord+=it.gorduras||0;
+    });
+    var agora=new Date();
+    var titulo = analiseAtual.itens.map(function(it){return it.nome;}).join(', ');
+    if(titulo.length>60) titulo=titulo.slice(0,57)+'…';
+    diario.entradas.push({
+      id: Date.now(),
+      hora: ('0'+agora.getHours()).slice(-2)+':'+('0'+agora.getMinutes()).slice(-2),
+      titulo: titulo,
+      kcal:t.kcal, prot:t.prot, carb:t.carb, gord:t.gord
+    });
+    gravar(chaveDia(hoje), diario);
+    limparEntrada();
+    renderTudo();
+    renderHistorico();
+  });
+
+  $('btnDescartar').addEventListener('click', limparEntrada);
+
+  function limparEntrada(){
+    limparResultado();
+    fotoBase64=null;
+    $('inputFoto').value='';
+    $('previewFoto').style.display='none';
+    $('previewFoto').src='';
+    $('zonaFoto').style.display='block';
+    $('notaFoto').value='';
+    $('textoComida').value='';
+  }
+  function limparResultado(){
+    analiseAtual=null;
+    $('resultado').style.display='none';
+    $('erro').style.display='none';
+  }
+  function mostrarErro(msg){
+    var el=$('erro'); el.textContent=msg; el.style.display='block';
+  }
+
+  function removerEntrada(id){
+    diario.entradas = diario.entradas.filter(function(e){return e.id!==id;});
+    gravar(chaveDia(hoje), diario);
+    renderTudo();
+    renderHistorico();
+  }
+
+  // meta
+  $('btnMeta').addEventListener('click', function(){
+    $('inputMeta').value=meta;
+    $('modalMeta').style.display='flex';
+  });
+  $('btnMetaCancelar').addEventListener('click', function(){ $('modalMeta').style.display='none'; });
+  $('btnMetaSalvar').addEventListener('click', function(){
+    var v=parseInt($('inputMeta').value,10);
+    if(v && v>=800 && v<=6000){
+      meta=v;
+      gravar('kcal:config',{meta:meta});
+      $('modalMeta').style.display='none';
+      renderTudo();
+      renderHistorico();
+    }
+  });
+
+  // chave API
+  $('btnChave').addEventListener('click', function(){
+    $('inputChave').value = ler('kcal:chave','') || '';
+    $('modalChave').style.display='flex';
+  });
+  $('btnChaveCancelar').addEventListener('click', function(){ $('modalChave').style.display='none'; });
+  $('btnChaveSalvar').addEventListener('click', function(){
+    var v=$('inputChave').value.trim();
+    if(v){
+      gravar('kcal:chave', v);
+      $('modalChave').style.display='none';
+    }
+  });
+
+  iniciar();
+})();
+</script>
+</body>
+</html>
